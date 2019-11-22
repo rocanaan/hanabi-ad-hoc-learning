@@ -38,6 +38,7 @@ import numpy as np
 import rainbow_agent
 import tensorflow as tf
 import random
+import sys
 
 
 from rulebased_agent import RulebasedAgent
@@ -248,7 +249,7 @@ def initialize_checkpointing(agent, experiment_logger, checkpoint_dir,checkpoint
       tf.logging.info('Reloaded checkpoint and will start from iteration %d',
                       start_iteration)
     else:
-      print("load failed")
+      sys.exit("load failed")
     #redirect checkpointer from dir to save_dir
     experiment_checkpointer = checkpointer.Checkpointer(checkpoint_save_dir, checkpoint_file_prefix)
   return start_iteration, experiment_checkpointer
