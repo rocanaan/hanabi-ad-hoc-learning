@@ -1,5 +1,5 @@
-Run [evaluate_paired_rule_based.py](Experiments/Evaluation/run_from_checkpoint_rule_based.sh) to get performance of rainbow agents vs. rule-based agents.
-Run [evaluate_paired_rainbow.py](Experiments/Evaluation/run_from_checkpoint_rule_based.sh) to get performance of rainbow agents vs. rainbow agents.
+Run [run_from_checkpoint_rule_based.sh](Experiments/Evaluation/run_from_checkpoint_rule_based.sh) to get performance of rainbow agents vs. rule-based agents.
+Run [run_from_checkpoint_rainbow.sh](Experiments/Evaluation/run_from_checkpoint_rainbow.sh) to get performance of rainbow agents vs. rainbow agents.
 
 This work is based on rainbow agent described below. 
 
