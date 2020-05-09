@@ -34,6 +34,8 @@ import numpy as np
 import replay_memory
 import tensorflow as tf
 
+import time
+
 
 slim = tf.contrib.slim
 
@@ -314,11 +316,16 @@ class DQNAgent(object):
     Returns:
       A legal, int-valued action.
     """
-    self._train_step()
 
+    # Profiling
+    start = time.time()
+    self._train_step()
+    train= time.time()-start
     self.action = self._select_action(observation, legal_actions)
     self._record_transition(current_player, reward, observation, legal_actions,
                             self.action)
+    act = time.time()-(start+train)
+    # print("{0} {1}".format(train, act))
     return self.action
 
   def end_episode(self, final_rewards):

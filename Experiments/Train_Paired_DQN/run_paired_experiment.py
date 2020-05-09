@@ -342,7 +342,17 @@ def run_one_episode(my_agent, their_agent, environment, obs_stacker):
   # Keep track of per-player reward.
   reward_since_last_action = np.zeros(environment.players)
 
+  total_step_time = 0.0
+  total_env_time = 0.0
+  total_agent_time = 0.0
+  total_partner_time = 0.0
+
+  start_time=time.time()
+
   while not is_done:
+    total_step_time += time.time()-start_time
+    start_time=time.time()
+
     # observations, reward, is_done, _ = environment.step(action.item())
     observations, reward, is_done, _ = environment.step(action)
 
@@ -352,6 +362,7 @@ def run_one_episode(my_agent, their_agent, environment, obs_stacker):
 
     reward_since_last_action += modified_reward
 
+
     step_number += 1
     if is_done:
       break
@@ -359,14 +370,22 @@ def run_one_episode(my_agent, their_agent, environment, obs_stacker):
         parse_observations(observations, environment.num_moves(), obs_stacker))
     observation = observations['player_observations'][current_player]
 
+
+    env_time=time.time()
+    total_env_time+=env_time-start_time
+
     if current_player in has_played:
       if current_player == my_player_index:
         # print("Has played and zero")
         action = my_agent.step(reward_since_last_action[current_player],
                           current_player, legal_moves, observation_vector).item()
+        agent_time = time.time()
+        total_agent_time+= agent_time-env_time
       else:
         # print("Has played and not zero")
         action = their_agent.act(observation)
+        partner_time = time.time()
+        total_partner_time+= partner_time-env_time
     else:
       # Each player begins the episode on their first turn (which may not be
       # the first move of the game).
@@ -374,14 +393,24 @@ def run_one_episode(my_agent, their_agent, environment, obs_stacker):
         # print("Not Has played and zero")
         action = my_agent.begin_episode(current_player, legal_moves,
                                    observation_vector).item()
+        agent_time = time.time()
+        total_agent_time+= agent_time-env_time
       else:
         # print("Not Has played and not zero")
         # print(observations)
         action = their_agent.act(observation)
+        partner_time = time.time()
+        total_partner_time+= partner_time-env_time
       has_played.add(current_player)
 
     # Reset this player's reward accumulator.
     reward_since_last_action[current_player] = 0
+
+  # Profiling
+  # print("Average  time per step = {0}".format(total_step_time/step_number))
+  # print("Average envornment time per step = {0}".format(total_env_time/step_number))
+  # print("Average agent time per step = {0}".format(2*total_agent_time/step_number))
+  # print("Average partner time per step = {0}".format(2*total_partner_time/step_number))
 
   my_agent.end_episode(reward_since_last_action)
 
