@@ -3,7 +3,7 @@
 BASE_DIR="../../Logs/Rainbow/Paired/"
 CUR_DATE=`date "+%Y%m%d-%H%M%S"`
 LOG_PATH="$BASE_DIR$CUR_DATE"
-# CHECKPOINT_DIR="${BASE_DIR}20190906-153116/checkpoints"
+CHECKPOINT_DIR="${BASE_DIR}20190906-153116/checkpoints"
 
 
 export PYTHONPATH=${PYTHONPATH}:../..
@@ -20,6 +20,6 @@ echo $PYTHONPATH$
 
 python -um train_paired \
   --base_dir=${LOG_PATH} \
-  --gin_files="hanabi_rainbow.gin"
-  --gin_bindings='RainbowAgent' 
-  --checkpoint_dir=${CHECKPOINT_DIR} 
+  --gin_files="hanabi_rainbow.gin"\
+  --checkpoint_dir=${CHECKPOINT_DIR} \
+  # --gin_bindings='RainbowAgent' \
