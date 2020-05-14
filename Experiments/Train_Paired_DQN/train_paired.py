@@ -43,7 +43,7 @@ AGENT_CLASSES = {'SimpleAgent': SimpleAgent, 'RandomAgent': RandomAgent, 'Intern
 'OuterAgent': OuterAgent,'IGGIAgent':IGGIAgent,'LegalRandomAgent':LegalRandomAgent,'FlawedAgent':FlawedAgent,
 'PiersAgent':PiersAgent, 'VanDenBerghAgent':VanDenBerghAgent}
 
-rulebased_names = ['RandomAgent', 'InternalAgent','OuterAgent','IGGIAgent','LegalRandomAgent','FlawedAgent','PiersAgent','VanDenBerghAgent']
+rulebased_names = ['InternalAgent','OuterAgent','IGGIAgent','LegalRandomAgent','FlawedAgent','PiersAgent','VanDenBerghAgent']
 all_agent_names = rulebased_names.copy()
 all_agent_names.append('Mirror')
 

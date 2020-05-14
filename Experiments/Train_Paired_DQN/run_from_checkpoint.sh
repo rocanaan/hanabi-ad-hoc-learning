@@ -23,7 +23,7 @@ python3 -um train_paired \
   --base_dir=${LOG_PATH} \
   --gin_files="hanabi_rainbow.gin"\
   --checkpoint_dir=${LOG_PATH} \
-  --checkpoint_version=120 \
+  --checkpoint_version=155 \
   --training_partners=${TRAINING_PARTNERS} \
   --eval_partners=${EVAL_PARTNERS} \
   --lenient="True"

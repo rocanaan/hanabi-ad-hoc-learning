@@ -6,7 +6,16 @@ LOG_PATH="$BASE_DIR$CUR_DATE"
 CHECKPOINT_DIR="${LOG_PATH}/checkpoints"
 
 # Training and evalu partners can be either "rb" all"
-TRAINING_PARTNERS="Mirror"
+TRAINING_PARTNERS="all"
+# TRAINING_PARTNERS="all"
+# TRAINING_PARTNERS="all"
+# TRAINING_PARTNERS="all"
+# TRAINING_PARTNERS="all"
+# TRAINING_PARTNERS="all"
+# TRAINING_PARTNERS="all"
+# TRAINING_PARTNERS="all"
+# TRAINING_PARTNERS="all"
+
 EVAL_PARTNERS="all"
 
 
