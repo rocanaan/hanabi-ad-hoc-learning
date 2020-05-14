@@ -55,7 +55,9 @@ from van_den_bergh_agent import VanDenBerghAgent
 
 
 AGENTS = [IGGIAgent, InternalAgent, OuterAgent, LegalRandomAgent, VanDenBerghAgent, FlawedAgent, PiersAgent]
-
+AGENT_CLASSES = {'SimpleAgent': SimpleAgent, 'RandomAgent': RandomAgent, 'InternalAgent': InternalAgent, 
+'OuterAgent': OuterAgent,'IGGIAgent':IGGIAgent,'LegalRandomAgent':LegalRandomAgent,'FlawedAgent':FlawedAgent,
+'PiersAgent':PiersAgent, 'VanDenBerghAgent':VanDenBerghAgent}
 
 LENIENT_SCORE = True
 
@@ -238,7 +240,7 @@ def initialize_checkpointing(agent, experiment_logger, checkpoint_dir,checkpoint
     print("Didn't enter checkpoint version, will load latest checkpoint")
     latest_checkpoint_version = checkpointer.get_latest_checkpoint_number(checkpoint_dir)
   else:
-    print("trying to load checkpoint version" + checkpoint_version)
+    print("trying to load checkpoint version " + checkpoint_version)
     latest_checkpoint_version = int(checkpoint_version)
   if latest_checkpoint_version >= 0:
     dqn_dictionary = experiment_checkpointer.load_checkpoint(
@@ -312,7 +314,7 @@ def parse_observations(observations, num_actions, obs_stacker):
 
 # TODO: This is a special case of run_one_episode taken directly from the base Rainbow implementation. It should be unified with the next method, possibly by solving the
 # agent.act inconsistency (rule-based agents expect only observation, but Rainbow expects obs + legal action)
-def run_one_episode_mirror(agent, environment, obs_stacker):
+def run_one_episode_mirror(agent, lenient, environment, obs_stacker):
   """Runs the agent on a single game of Hanabi in self-play mode.
 
   Args:
@@ -342,7 +344,7 @@ def run_one_episode_mirror(agent, environment, obs_stacker):
   while not is_done:
     observations, reward, is_done, _ = environment.step(action.item())
 
-    modified_reward = max(reward, 0) if LENIENT_SCORE else reward
+    modified_reward = max(reward, 0) if lenient else reward
     total_reward += modified_reward
 
     reward_since_last_action += modified_reward
@@ -371,7 +373,7 @@ def run_one_episode_mirror(agent, environment, obs_stacker):
   return step_number, total_reward
 
 
-def run_one_episode(my_agent, their_agent, environment, obs_stacker, ensemble):
+def run_one_episode(my_agent, their_agent, lenient, environment, obs_stacker, ensemble):
   """Runs the agent on a single game of Hanabi in self-play mode.
 
   Args:
@@ -384,9 +386,9 @@ def run_one_episode(my_agent, their_agent, environment, obs_stacker, ensemble):
     total_reward: float, undiscounted return for this episode.
   """
 
-  if ensemble:
-    agent_index = random.randint(0,len(AGENTS-1))
-    their_agent = AGENTS[agent_index]({})
+  # if ensemble:
+  #   agent_index = random.randint(0,len(AGENTS-1))
+  #   their_agent = AGENTS[agent_index]({})
   obs_stacker.reset_stack()
   observations = environment.reset()
   current_player, legal_moves, observation_vector = (
@@ -429,7 +431,7 @@ def run_one_episode(my_agent, their_agent, environment, obs_stacker, ensemble):
     observations, reward, is_done, _ = environment.step(action)
 
 
-    modified_reward = max(reward, 0) if LENIENT_SCORE else reward
+    modified_reward = max(reward, 0) if lenient else reward
     total_reward += modified_reward
 
     reward_since_last_action += modified_reward
@@ -510,7 +512,7 @@ def run_one_episode(my_agent, their_agent, environment, obs_stacker, ensemble):
   return step_number, total_reward
 
 
-def run_one_phase(my_agent, their_agent , environment, obs_stacker, min_steps, statistics,
+def run_one_phase(my_agent, training_partners, lenient, environment, obs_stacker, min_steps, statistics,
                   run_mode_str):
   """Runs the agent/environment loop until a desired number of steps.
 
@@ -532,11 +534,12 @@ def run_one_phase(my_agent, their_agent , environment, obs_stacker, min_steps, s
   sum_returns = 0.
 
   while step_count < min_steps:
-    r = random.uniform(0,1)
-    if r<=MIRROR_TRAINING_PROBABILITY:
-      episode_length, episode_return = run_one_episode_mirror(my_agent, environment, obs_stacker)
+    partner_name = random.choice(training_partners)
+    if partner_name == 'Mirror':
+      episode_length, episode_return = run_one_episode_mirror(my_agent, lenient,  environment, obs_stacker)
     else: 
-      episode_length, episode_return = run_one_episode(my_agent, their_agent, environment,
+      their_agent = AGENT_CLASSES[partner_name]({})
+      episode_length, episode_return = run_one_episode(my_agent, their_agent, lenient, environment,
                                                      obs_stacker,ENSEMBLE)
     statistics.append({
         '{}_episode_lengths'.format(run_mode_str): episode_length,
@@ -551,7 +554,7 @@ def run_one_phase(my_agent, their_agent , environment, obs_stacker, min_steps, s
 
 
 @gin.configurable
-def run_one_iteration(my_agent, their_agent, environment, obs_stacker,
+def run_one_iteration(my_agent, training_partners, eval_partners, lenient, environment, obs_stacker,
                       iteration, training_steps,
                       evaluate_every_n=250,
                       num_evaluation_games=100,
@@ -580,37 +583,41 @@ def run_one_iteration(my_agent, their_agent, environment, obs_stacker,
   # First perform the training phase, during which the agent learns.
   my_agent.eval_mode = False
   number_steps, sum_returns, num_episodes = (
-      run_one_phase(my_agent, their_agent, environment, obs_stacker, training_steps, statistics,
+      run_one_phase(my_agent, training_partners, lenient, environment, obs_stacker, training_steps, statistics,
                     'train'))
-  time_delta = time.time() - start_time
-  tf.logging.info('Average training steps per second: %.2f',
-                  number_steps / time_delta)
-
-  average_return = sum_returns / num_episodes
-  tf.logging.info('Average per episode return: %.2f', average_return)
-  statistics.append({'average_return': average_return})
 
   # Also run an evaluation phase if desired.
   if evaluate_every_n is not None and iteration % evaluate_every_n == 0:
-    episode_data = []
+    # episode_data = []
     my_agent.eval_mode = True
     # Collect episode data for all games.
-    for _ in range(num_evaluation_games):
-      episode_data.append(run_one_episode(my_agent, their_agent, environment, obs_stacker, False))
-      # TODO: Here instead of doing their agent
+    # for _ in range(num_evaluation_games):
+    #   episode_data.append(run_one_episode(my_agent, their_agent, environment, obs_stacker, False))
+    #   # TODO: Here instead of doing their agent
 
     with open ("{0}/eval{1}".format(checkpoint_dir,iteration), "w") as eval_file:
-      for agent_index in range (len(AGENTS)):
-        other_agent = AGENTS[agent_index]({})
+      for ep in eval_partners:
         rewards = []
-        for _ in range(num_evaluation_games):
-          steps, total_reward = run_one_episode(my_agent, other_agent, environment, obs_stacker, False)
-          rewards.append(total_reward)
-        mean = np.mean(rewards)
-        sd = np.std(rewards)
+        if ep == 'Mirror':
+          for _ in range(num_evaluation_games):
+            steps, total_reward = run_one_episode_mirror(my_agent, lenient, environment, obs_stacker)
+            rewards.append(total_reward)
+          mean = np.mean(rewards)
+          sd = np.std(rewards)
+          eval_file.write("{0} Mirror {1} {2}\n".format(num_evaluation_games,mean,sd,steps))
+          print ("Played {0} games with Mirror. Average score: {1} SD: {2} Total steps: {3}".format(num_evaluation_games,mean,sd,steps))
 
-        eval_file.write("{0} {1} {2} {3} {4}\n".format(num_evaluation_games,other_agent,mean,sd,steps))
-        print ("Played {0} games with agent {1}. Average score: {2} SD: {3} Total steps: {4}".format(num_evaluation_games,other_agent,mean,sd,steps))
+
+        else:
+          their_agent = AGENT_CLASSES[ep]({})
+          for _ in range(num_evaluation_games):
+            steps, total_reward = run_one_episode(my_agent, their_agent, lenient, environment, obs_stacker, False)
+            rewards.append(total_reward)
+          mean = np.mean(rewards)
+          sd = np.std(rewards)
+
+          eval_file.write("{0} {1} {2} {3} {4}\n".format(num_evaluation_games,ep,mean,sd,steps))
+          print ("Played {0} games with agent {1}. Average score: {2} SD: {3} Total steps: {4}".format(num_evaluation_games,ep,mean,sd,steps))
 
       # other_agent = my_agent
       # rewards = []
@@ -621,13 +628,13 @@ def run_one_iteration(my_agent, their_agent, environment, obs_stacker,
       # sd = np.std(rewards)
       # print ("Played {0} games in self-play. Average score: {1} SD: {2} Total steps: {3}".format(num_evaluation_games,mean,sd,steps))
 
-      for _ in range(num_evaluation_games):
-        steps, total_reward = run_one_episode_mirror(my_agent, environment, obs_stacker)
-        rewards.append(total_reward)
-      mean = np.mean(rewards)
-      sd = np.std(rewards)
-      eval_file.write("{0} Mirror {1} {2}\n".format(num_evaluation_games,mean,sd,steps))
-      print ("Played {0} games in self-play (copy). Average score: {1} SD: {2} Total steps: {3}".format(num_evaluation_games,mean,sd,steps))
+      # for _ in range(num_evaluation_games):
+      #   steps, total_reward = run_one_episode_mirror(my_agent, environment, obs_stacker)
+      #   rewards.append(total_reward)
+      # mean = np.mean(rewards)
+      # sd = np.std(rewards)
+      # eval_file.write("{0} Mirror {1} {2}\n".format(num_evaluation_games,mean,sd,steps))
+      # print ("Played {0} games in self-play (copy). Average score: {1} SD: {2} Total steps: {3}".format(num_evaluation_games,mean,sd,steps))
 
   
   else:
@@ -636,18 +643,35 @@ def run_one_iteration(my_agent, their_agent, environment, obs_stacker,
         'eval_episode_returns': -1
     })
     
-  print(their_agent)  
+  # print(their_agent)  
     
   global TOTAL_STEP_COUNT
   global TOTAL_TIME
   global GLOBAL_RESULTS
   TOTAL_STEP_COUNT+=number_steps
+  time_delta = time.time() - start_time
+  average_return = sum_returns / num_episodes
   TOTAL_TIME+=time_delta
   iteration_results =[TOTAL_STEP_COUNT,TOTAL_TIME,average_return]
   GLOBAL_RESULTS.append(iteration_results)
-  for r in GLOBAL_RESULTS:
-    print(r[0],r[1],r[2])
 
+
+  # for r in GLOBAL_RESULTS:
+  #   print(r[0],r[1],r[2])
+
+  print("End of iteration {0}".format(iteration))
+  print("Checkpoint_dir = {0}".format(checkpoint_dir))
+  print("Training partners = {0}".format(training_partners))
+  print("Evaluation partners = {0}".format(eval_partners))
+  print("Lenient scoring  = {0}".format(lenient))
+  print("training_steps = {0}".format(training_steps))
+
+  tf.logging.info('Average training steps per second: %.2f',
+                  number_steps / time_delta)
+  tf.logging.info('Average per episode return: %.2f', average_return)
+  statistics.append({'average_return': average_return})
+
+  print("=-=-=---=-=")
 
   return statistics.data_lists
 
@@ -689,7 +713,7 @@ def checkpoint_experiment(experiment_checkpointer, agent, experiment_logger,
 
 
 @gin.configurable
-def run_paired_experiment(my_agent,  their_agent,
+def run_paired_experiment(my_agent,  training_partners, eval_partners, lenient,
                    environment,
                    start_iteration,
                    obs_stacker,
@@ -711,7 +735,7 @@ def run_paired_experiment(my_agent,  their_agent,
 
   for iteration in range(start_iteration, num_iterations):
     start_time = time.time()
-    statistics = run_one_iteration(my_agent, their_agent, environment, obs_stacker, iteration,
+    statistics = run_one_iteration(my_agent, training_partners, eval_partners, lenient, environment, obs_stacker, iteration,
                                    training_steps,checkpoint_dir=checkpoint_dir)
     tf.logging.info('Iteration %d took %d seconds', iteration,
                     time.time() - start_time)
