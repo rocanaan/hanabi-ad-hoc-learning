@@ -174,6 +174,19 @@ class DQNAgent(object):
     self.batch_staged = False
     self.optimizer = optimizer
 
+
+    if 'gpu' in tf_device:
+      gpus = tf.config.experimental.list_physical_devices('GPU')
+      try:
+        # Currently, memory growth needs to be the same across GPUs
+        for gpu in gpus:
+          tf.config.experimental.set_memory_growth(gpu, True)
+        logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+        print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+      except RuntimeError as e:
+        # Memory growth must be set before GPUs have been initialized
+        print(e)
+
     with tf.device(tf_device):
       # Calling online_convnet will generate a new graph as defined in
       # graph_template using whatever input is passed, but will always share
