@@ -1,10 +1,5 @@
 #!/bin/sh
 
-BASE_DIR="../../Logs/Rainbow/Paired/"
-CUR_DATE=`date "+%Y%m%d-%H%M%S"`
-LOG_PATH="$BASE_DIR$CUR_DATE"
-CHECKPOINT_DIR="${LOG_PATH}/checkpoints"
-
 # Training and evalu partners can be either "rb" all"
 TRAINING_PARTNERS="all"
 # TRAINING_PARTNERS="rb"
@@ -19,6 +14,11 @@ TRAINING_PARTNERS="all"
 
 
 EVAL_PARTNERS="all"
+
+BASE_DIR="../../Logs/Rainbow/Paired/"
+CUR_DATE=`date "+%Y%m%d-%H%M%S"`
+LOG_PATH="$BASE_DIR$CUR_DATE$TRAINING_PARTNERS"
+CHECKPOINT_DIR="${LOG_PATH}/checkpoints"
 
 
 export PYTHONPATH=${PYTHONPATH}:../..
@@ -39,5 +39,5 @@ python -um train_paired \
   --checkpoint_dir=${CHECKPOINT_DIR} \
   --training_partners=${TRAINING_PARTNERS} \
   --eval_partners=${EVAL_PARTNERS} \
-  --lenient="True"
+  --lenient="False"
   # --gin_bindings='RainbowAgent' \
