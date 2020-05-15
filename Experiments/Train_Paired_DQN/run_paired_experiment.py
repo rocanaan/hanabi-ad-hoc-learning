@@ -605,6 +605,9 @@ def run_one_iteration(my_agent, training_partners, eval_partners, lenient, envir
 
     with open ("{0}/eval{1}".format(checkpoint_dir,iteration), "w") as eval_file:
       for ep in eval_partners:
+        training_flag = False
+        if ep in training_partners:
+          training_flag = True
         rewards = []
         lenient_rewards = []
         strict_rewards = []
@@ -617,7 +620,7 @@ def run_one_iteration(my_agent, training_partners, eval_partners, lenient, envir
               count_bombed+=1
           mean = np.mean(rewards)
           sd = np.std(rewards)
-          eval_file.write("{0} Mirror {1} {2} {3}\n".format(num_evaluation_games,mean,sd,count_bombed))
+          eval_file.write("{0} Mirror {1} {2} {3} {4}\n".format(num_evaluation_games,mean,sd,count_bombed, training_flag))
           print ("Played {0} games with Mirror. Average score: {1} SD: {2} Bombed: {3}".format(num_evaluation_games,mean,sd,count_bombed))
 
 
@@ -631,7 +634,7 @@ def run_one_iteration(my_agent, training_partners, eval_partners, lenient, envir
           mean = np.mean(rewards)
           sd = np.std(rewards)
 
-          eval_file.write("{0} {1} {2} {3} {4}\n".format(num_evaluation_games,ep,mean,sd,count_bombed))
+          eval_file.write("{0} {1} {2} {3} {4} {5}\n".format(num_evaluation_games,ep,mean,sd,count_bombed, training_flag))
           print ("Played {0} games with agent {1}. Average score: {2} SD: {3} Bombed: {4}".format(num_evaluation_games,ep,mean,sd,count_bombed))
 
       # other_agent = my_agent
