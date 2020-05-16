@@ -334,6 +334,8 @@ def run_one_episode_mirror(agent, lenient, environment, obs_stacker):
 
   is_done = False
   total_reward = 0
+  lenient_reward = 0
+  strict_reward = 0
   bombed = False
   step_number = 0
 
@@ -347,6 +349,8 @@ def run_one_episode_mirror(agent, lenient, environment, obs_stacker):
 
     modified_reward = max(reward, 0) if lenient else reward
     total_reward += modified_reward
+    lenient_reward += max(reward,0)
+    strict_reward += reward
 
     if reward <0:
       bombed = True
@@ -374,7 +378,7 @@ def run_one_episode_mirror(agent, lenient, environment, obs_stacker):
   agent.end_episode(reward_since_last_action)
 
   #tf.logging.info('EPISODE: %d %g', step_number, total_reward)
-  return step_number, total_reward, bombed
+  return step_number, total_reward, lenient_reward, strict_reward, bombed
 
 
 def run_one_episode(my_agent, their_agent, lenient, environment, obs_stacker):
@@ -411,6 +415,8 @@ def run_one_episode(my_agent, their_agent, lenient, environment, obs_stacker):
 
   is_done = False
   total_reward = 0
+  lenient_reward = 0
+  strict_reward = 0
   bombed = False
   step_number = 0
 
@@ -438,9 +444,10 @@ def run_one_episode(my_agent, their_agent, lenient, environment, obs_stacker):
 
     modified_reward = max(reward, 0) if lenient else reward
     total_reward += modified_reward
+    lenient_reward += max(reward,0)
+    strict_reward += reward
     if reward <0:
       bombed = True
-
 
     reward_since_last_action += modified_reward
 
@@ -517,7 +524,7 @@ def run_one_episode(my_agent, their_agent, lenient, environment, obs_stacker):
   my_agent.end_episode(reward_since_last_action)
 
 #   tf.logging.info('EPISODE: %d %g', step_number, total_reward)
-  return step_number, total_reward, bombed
+  return step_number, total_reward, lenient_reward, strict_reward, bombed
 
 
 def run_one_phase(my_agent, training_partners, lenient, environment, obs_stacker, min_steps, statistics,
@@ -544,10 +551,10 @@ def run_one_phase(my_agent, training_partners, lenient, environment, obs_stacker
   while step_count < min_steps:
     partner_name = random.choice(training_partners)
     if partner_name == 'Mirror':
-      episode_length, episode_return, num_bombed = run_one_episode_mirror(my_agent, lenient,  environment, obs_stacker)
+      episode_length, episode_return, lr, sr, num_bombed = run_one_episode_mirror(my_agent, lenient,  environment, obs_stacker)
     else: 
       their_agent = AGENT_CLASSES[partner_name]({})
-      episode_length, episode_return, num_bombed = run_one_episode(my_agent, their_agent, lenient, environment,
+      episode_length, episode_return, lr, sr, num_bombed = run_one_episode(my_agent, their_agent, lenient, environment,
                                                      obs_stacker)
     statistics.append({
         '{}_episode_lengths'.format(run_mode_str): episode_length,
@@ -614,27 +621,39 @@ def run_one_iteration(my_agent, training_partners, eval_partners, lenient, envir
         count_bombed = 0
         if ep == 'Mirror':
           for _ in range(num_evaluation_games):
-            steps, total_reward, bombed = run_one_episode_mirror(my_agent, lenient, environment, obs_stacker)
+            steps, total_reward, lenient_reward, strict_reward, bombed = run_one_episode_mirror(my_agent, lenient, environment, obs_stacker)
             rewards.append(total_reward)
+            lenient_rewards.append(lenient_reward)
+            strict_rewards.append(strict_reward)
             if bombed:
               count_bombed+=1
           mean = np.mean(rewards)
+          mean_lenient = np.mean(lenient_rewards)
+          mean_strict = np.mean(strict_rewards)
           sd = np.std(rewards)
-          eval_file.write("{0} Mirror {1} {2} {3} {4}\n".format(num_evaluation_games,mean,sd,count_bombed, training_flag))
+          sd_lenient = np.std(lenient_rewards)
+          sd_strict = np.std(strict_rewards)
+          eval_file.write("{0} Mirror {1} {2} {3} {4} {5} {6} {7} {8}\n".format(num_evaluation_games,mean,sd, mean_lenient, sd_lenient, mean_strict, sd_strict, count_bombed, training_flag))
           print ("Played {0} games with Mirror. Average score: {1} SD: {2} Bombed: {3}".format(num_evaluation_games,mean,sd,count_bombed))
 
 
         else:
           their_agent = AGENT_CLASSES[ep]({})
           for _ in range(num_evaluation_games):
-            steps, total_reward, bombed = run_one_episode(my_agent, their_agent, lenient, environment, obs_stacker)
+            steps, total_reward, lenient_reward, strict_reward, bombed = run_one_episode(my_agent, their_agent, lenient, environment, obs_stacker)
             rewards.append(total_reward)
+            lenient_rewards.append(lenient_reward)
+            strict_rewards.append(strict_reward)
             if bombed:
               count_bombed+=1
           mean = np.mean(rewards)
+          mean_lenient = np.mean(lenient_rewards)
+          mean_strict = np.mean(strict_rewards)
           sd = np.std(rewards)
+          sd_lenient = np.std(lenient_rewards)
+          sd_strict = np.std(strict_rewards)
 
-          eval_file.write("{0} {1} {2} {3} {4} {5}\n".format(num_evaluation_games,ep,mean,sd,count_bombed, training_flag))
+          eval_file.write("{0} {1} {2} {3} {4} {5} {6} {7} {8} {9}\n".format(num_evaluation_games,ep,mean,sd, mean_lenient, sd_lenient, mean_strict, sd_strict, count_bombed, training_flag))
           print ("Played {0} games with agent {1}. Average score: {2} SD: {3} Bombed: {4}".format(num_evaluation_games,ep,mean,sd,count_bombed))
 
       # other_agent = my_agent

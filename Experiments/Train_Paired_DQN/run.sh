@@ -1,9 +1,9 @@
 #!/bin/sh
 
 # Training and evalu partners can be either "rb" all"
-TRAINING_PARTNERS="all"
+# TRAINING_PARTNERS="all"
 # TRAINING_PARTNERS="rb"
-# TRAINING_PARTNERS="Mirror"
+TRAINING_PARTNERS="all"
 # TRAINING_PARTNERS="InternalAgent"
 # TRAINING_PARTNERS="OuterAgent"
 # TRAINING_PARTNERS="IGGIAgent"
