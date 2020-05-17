@@ -760,7 +760,7 @@ def run_paired_experiment(my_agent,  training_partners, eval_partners, lenient,
                    num_iterations=200,
                    training_steps=5000,
                    logging_file_prefix='log',
-                   log_every_n=1,
+                   log_every_n=10,
                    checkpoint_every_n=1):
   """Runs a full experiment, spread over multiple iterations."""
   # their_agent = InternalAgent({})

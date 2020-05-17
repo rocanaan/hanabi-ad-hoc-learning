@@ -29,6 +29,7 @@ WrappedReplayMemory.replay_capacity = 50000
 run_experiment.training_steps = 5000
 run_experiment.num_iterations = 20000
 run_experiment.checkpoint_every_n = 500
+run_experiment.log_every_n = 250
 run_one_iteration.evaluate_every_n = 10
 
 # Small Hanabi.
