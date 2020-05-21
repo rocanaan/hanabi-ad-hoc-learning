@@ -88,7 +88,8 @@ def parse_partner_names(name_string):
     return rulebased_names
   else:
     partners=[] 
-    names=name_string.split()
+    names=name_string.split("_")
+    print("Generating partners: " + str(names))
     for n in names:
       if n in all_agent_names:
         partners.append(n)

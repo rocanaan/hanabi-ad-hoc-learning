@@ -1,9 +1,9 @@
 #!/bin/sh
 
 # Training and evalu partners can be either "rb" all"
-# TRAINING_PARTNERS="all"
-# TRAINING_PARTNERS="rb"
 TRAINING_PARTNERS="all"
+# TRAINING_PARTNERS="rb"
+# TRAINING_PARTNERS="Mirror"
 # TRAINING_PARTNERS="InternalAgent"
 # TRAINING_PARTNERS="OuterAgent"
 # TRAINING_PARTNERS="IGGIAgent"
@@ -11,6 +11,23 @@ TRAINING_PARTNERS="all"
 # TRAINING_PARTNERS="FlawedAgent"
 # TRAINING_PARTNERS="PiersAgent"
 # TRAINING_PARTNERS="VanDenBerghAgent"
+
+
+# For  training will all agents except one
+# TRAINING_PARTNERS="InternalAgent_OuterAgent_IGGIAgent_FlawedAgent_PiersAgent_VanDenBerghAgent_Mirror" # All 
+# TRAINING_PARTNERS="OuterAgent_IGGIAgent_FlawedAgent_PiersAgent_VanDenBerghAgent_Mirror" # No Internal
+# TRAINING_PARTNERS="InternalAgent_IGGIAgent_FlawedAgent_PiersAgent_VanDenBerghAgent_Mirror" # No Outer 
+# TRAINING_PARTNERS="InternalAgent_OuterAgent_FlawedAgent_PiersAgent_VanDenBerghAgent_Mirror" # No IGGI 
+# TRAINING_PARTNERS="InternalAgent_OuterAgent_IGGIAgent_PiersAgent_VanDenBerghAgent_Mirror" # No Flawed 
+# TRAINING_PARTNERS="InternalAgent_OuterAgent_IGGIAgent_FlawedAgent_VanDenBerghAgent_Mirror" # No Piers 
+# TRAINING_PARTNERS="InternalAgent_OuterAgent_IGGIAgent_FlawedAgent_PiersAgent_Mirror" # No VDB 
+# TRAINING_PARTNERS="InternalAgent_OuterAgent_IGGIAgent_FlawedAgent_PiersAgent_VanDenBerghAgent" # No mirror, same as rb 
+
+# Some possible sets of training partners that share a certain feature
+# TRAINING_PARTNERS="FlawedAgent_PiersAgent_VanDenBerghAgent" # Only probabilistic plays
+# TRAINING_PARTNERS="InternalAgent_OuterAgent_IGGIAgent" # Only predictable plays 
+
+
 
 
 EVAL_PARTNERS="all"

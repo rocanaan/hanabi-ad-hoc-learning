@@ -30,7 +30,7 @@ run_paired_experiment.training_steps = 5000
 run_paired_experiment.num_iterations = 40000
 run_paired_experiment.checkpoint_every_n = 1000
 run_paired_experiment.log_every_n = 250
-run_one_iteration.evaluate_every_n = 250
+run_one_iteration.evaluate_every_n = 5
 
 # Small Hanabi.
 create_environment.game_type = 'Hanabi-Full-CardKnowledge'
