@@ -65,7 +65,7 @@ def make_agents(file):
         names.append(l[1])
       elif l[0].lower() == 'rainbow':
         base_dir = l[1]
-        checkpoint_dir = l[2]
+        checkpoint_dir = base_dir+l[2]
         checkpoint_save_dir = base_dir+ 'test/checkpoints'
 
         checkpoint_version = l[3]
@@ -77,9 +77,9 @@ def make_agents(file):
         run_paired_experiment.load_gin_configs(FLAGS.gin_files, FLAGS.gin_bindings)
         environment = run_paired_experiment.create_environment()
         obs_stacker = run_paired_experiment.create_obs_stacker(environment)
-        my_agent = run_paired_experiment.create_agent(environment, obs_stacker,'Rainbow')
+        agent = run_paired_experiment.create_agent(environment, obs_stacker,'Rainbow')
         start_iteration, experiment_checkpointer = (
-            run_paired_experiment.initialize_checkpointing(my_agent,
+            run_paired_experiment.initialize_checkpointing(agent,
                                                     experiment_logger,
                                                     checkpoint_dir,
                                                     checkpoint_save_dir,
@@ -107,6 +107,7 @@ def main(unused_argv):
     for a2 ,n2 in zip(their_agents, their_names):
       runner = BehavioralRunner(SETTINGS,a1,a2)
       score = np.average(runner.run())
+      print("{} {} {}".format(n1,n2,score))
       results.append([n1,n2,score])
   for r in results:
     print(r)

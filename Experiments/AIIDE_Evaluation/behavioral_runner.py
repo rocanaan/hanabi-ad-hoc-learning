@@ -15,6 +15,9 @@ from flawed_agent import FlawedAgent
 from piers_agent import PiersAgent
 from van_den_bergh_agent import VanDenBerghAgent
 
+
+import run_paired_experiment
+
 from rainbow_agent import RainbowAgent
 
 class BehavioralRunner(object):
@@ -31,65 +34,73 @@ class BehavioralRunner(object):
 
   def run(self):
     """Run episodes."""
-    rewards = []
-    # agents = [self.agent_class(self.agent_config)
-    #             for _ in range(self.flags['players'])]
-    # agents = [a1,a2]
-    for episode in range(self.flags['num_episodes']):
-      reward_since_last_action = np.zeros(self.environment.players)
-      # if np.random.uniform() <= 0.5:
-      #   agents = [self.a1,self.a2]
-      # else:
-      #   agents = [self.a2,self.a1]
-      agents = [self.a1,self.a2]
-      observations = self.environment.reset()
-      done = False
-      episode_reward = 0
-      first_turn = True
-      while not done:
-        for agent_id, agent in enumerate(agents):
-          observation = observations['player_observations'][agent_id]
-          if first_turn == True:
-            # print(first_turn)
-            # print(observation['current_player'])
-            first_turn = False
-          if isinstance(agent,RainbowAgent):
-            print(observation)
-            print(observation['vectorized'])
-            print(len(observation['vectorized']))
-            print(observation['legal_moves_as_int'])
-            print(reward_since_last_action)
-            print(observation['current_player'])
-            legal_moves = np.ones(20)
-            for m in observation['legal_moves_as_int']:
-              legal_moves[m]=0
-            print(legal_moves)
-            action = agent._select_action(observation['vectorized'],legal_moves)
-          else:
-            action = agent.act(observation)
-            print('=-=-=-=-=--=-=')
-            print('other player made action')
-            print('=-=-=-=-=--=-=')
-          if observation['current_player'] == agent_id:
-            assert action is not None
-            current_player_action = action
-          else:
-            assert action is None
-        # Make an environment step.
-        # # print('Agent: {} action: {}'.format(observation['current_player'],
-        #                                     current_player_action))
-        observations, reward, done, unused_info = self.environment.step(
-            current_player_action)
-        if (reward >=0 or not self.lenient):
-          episode_reward += reward
+    obs_stacker = run_paired_experiment.create_obs_stacker(self.environment)
 
-      rewards.append(episode_reward)
-      # print('Running episode: %d' % episode)
-      # print('Reward of this episode: %d' % episode_reward)
-      # print('Max Reward: %.3f' % max(rewards))
-      # print('Average Reward: %.3f' % (sum(rewards)/(episode+1)))
-    # for a in agents:
-    #   a.rulebased.print_histogram()
+    rewards = []
+    for episode in range(self.flags['num_episodes']):
+      episode_length, episode_return, lr, sr, num_bombed = run_paired_experiment.run_episode_behavioral(self.a1, self.a2, self.lenient, self.environment, obs_stacker)
+      rewards.append(episode_return)
+    
+    # # agents = [self.agent_class(self.agent_config)
+    # #             for _ in range(self.flags['players'])]
+    # # agents = [a1,a2]
+    #   reward_since_last_action = np.zeros(self.environment.players)
+    #   # if np.random.uniform() <= 0.5:
+    #   #   agents = [self.a1,self.a2]
+    #   # else:
+    #   #   agents = [self.a2,self.a1]
+    #   agents = [self.a1,self.a2]
+    #   obs_stacker.reset_stack()
+    #   observations = self.environment.reset()
+    #   done = False
+    #   episode_reward = 0
+    #   first_turn = True
+    #   while not done:
+    #     for agent_id, agent in enumerate(agents):
+    #       observation = observations['player_observations'][agent_id]
+    #       if first_turn == True:
+    #         # print(first_turn)
+    #         # print(observation['current_player'])
+    #         first_turn = False
+    #       if isinstance(agent,RainbowAgent):
+    #         # print(observation)
+    #         # print(observation['vectorized'])
+    #         # print(len(observation['vectorized']))
+    #         # print(observation['legal_moves_as_int'])
+    #         # print(reward_since_last_action)
+    #         # print(observation['current_player'])
+    #         # legal_moves = np.ones(20)
+    #         # for m in observation['legal_moves_as_int']:
+    #         #   legal_moves[m]=0
+    #         # print(legal_moves)
+    #         current_player, legal_moves, observation_vector = ( run_paired_experiment.parse_observations(observations, self.environment.num_moves(), obs_stacker))
+    #         action = int(agent._select_action(observation['vectorized'],legal_moves))
+
+    #       else:
+    #         action = agent.act(observation)
+    #         print('=-=-=-=-=--=-=')
+    #         print('other player made action ' + str(action))
+    #         print('=-=-=-=-=--=-=')
+    #       if observation['current_player'] == agent_id:
+    #         assert action is not None
+    #         current_player_action = action
+    #       else:
+    #         assert action is None
+    #     # Make an environment step.
+    #     # # print('Agent: {} action: {}'.format(observation['current_player'],
+    #     #                                     current_player_action))
+    #     observations, reward, done, unused_info = self.environment.step(
+    #         current_player_action)
+    #     if (reward >=0 or not self.lenient):
+    #       episode_reward += reward
+
+    #   rewards.append(episode_reward)
+    #   # print('Running episode: %d' % episode)
+    #   # print('Reward of this episode: %d' % episode_reward)
+    #   # print('Max Reward: %.3f' % max(rewards))
+    #   # print('Average Reward: %.3f' % (sum(rewards)/(episode+1)))
+    # # for a in agents:
+    # #   a.rulebased.print_histogram()
     return rewards
 
 if __name__ == "__main__":

@@ -33,6 +33,7 @@ import copy
 from third_party.dopamine import checkpointer
 from third_party.dopamine import iteration_statistics
 import dqn_agent
+from rainbow_agent import RainbowAgent
 import gin.tf
 import rl_env
 import numpy as np
@@ -240,7 +241,7 @@ def initialize_checkpointing(agent, experiment_logger, checkpoint_dir,checkpoint
     print("Didn't enter checkpoint version, will load latest checkpoint")
     latest_checkpoint_version = checkpointer.get_latest_checkpoint_number(checkpoint_dir)
   else:
-    print("trying to load checkpoint version " + checkpoint_version)
+    print("trying to load checkpoint version {} from checkpoint dir{}".format(checkpoint_version,checkpoint_dir))
     latest_checkpoint_version = int(checkpoint_version)
   if latest_checkpoint_version >= 0:
     dqn_dictionary = experiment_checkpointer.load_checkpoint(
@@ -380,6 +381,160 @@ def run_one_episode_mirror(agent, lenient, environment, obs_stacker):
   #tf.logging.info('EPISODE: %d %g', step_number, total_reward)
   return step_number, total_reward, lenient_reward, strict_reward, bombed
 
+
+def run_episode_behavioral(my_agent, their_agent, lenient, environment, obs_stacker):
+  """Runs the agent on a single game of Hanabi in self-play mode.
+
+  Args:
+    agent: Agent playing Hanabi.
+    environment: The Hanabi environment.
+    obs_stacker: Observation stacker object.
+
+  Returns:
+    step_number: int, number of actions in this episode.
+    total_reward: float, undiscounted return for this episode.
+  """
+
+  # if ensemble:
+  #   agent_index = random.randint(0,len(AGENTS-1))
+  #   their_agent = AGENTS[agent_index]({})
+  obs_stacker.reset_stack()
+  observations = environment.reset()
+  current_player, legal_moves, observation_vector = (
+      parse_observations(observations, environment.num_moves(), obs_stacker))
+  observation = observations['player_observations'][current_player]
+  num_players = observation['num_players']
+  my_player_index = random.randint(0,num_players-1)
+  if current_player == my_player_index:
+    try:
+      action = my_agent.act(observation)
+    except AttributeError:
+      action = my_agent.begin_episode(current_player, legal_moves, observation_vector).item()
+  else:
+    try:
+      action = their_agent.act(observation)
+    except AttributeError:
+      action = their_agent.begin_episode(current_player, legal_moves,
+                                   observation_vector).item()
+
+  is_done = False
+  total_reward = 0
+  lenient_reward = 0
+  strict_reward = 0
+  bombed = False
+  step_number = 0
+
+  has_played = {current_player}
+
+  # Keep track of per-player reward.
+  reward_since_last_action = np.zeros(environment.players)
+
+  total_step_time = 0.0
+  total_env_time = 0.0
+  total_agent_time = 0.0
+  total_partner_time = 0.0
+  total_train_time = 0.0
+  total_act_time = 0.0
+
+  start_time=time.time()
+
+  while not is_done:
+    total_step_time += time.time()-start_time
+    start_time=time.time()
+
+    # observations, reward, is_done, _ = environment.step(action.item())
+    try:
+      observations, reward, is_done, _ = environment.step(action)
+    except ValueError:
+      observations, reward, is_done, _ = environment.step(int(action))
+
+
+    modified_reward = max(reward, 0) if lenient else reward
+    total_reward += modified_reward
+    lenient_reward += max(reward,0)
+    strict_reward += reward
+    if reward <0:
+      bombed = True
+
+    reward_since_last_action += modified_reward
+
+
+    step_number += 1
+    if is_done:
+      break
+    current_player, legal_moves, observation_vector = (
+        parse_observations(observations, environment.num_moves(), obs_stacker))
+    observation = observations['player_observations'][current_player]
+
+
+    env_time=time.time()
+    total_env_time+=env_time-start_time
+
+    if current_player in has_played:
+      if current_player == my_player_index:
+        # print("Has played and zero")
+        # action = my_agent.profile_step(reward_since_last_action[current_player],
+        #                   current_player, legal_moves, observation_vector).item()
+
+        try:
+          action = my_agent.act(observation)
+        except AttributeError:
+          action = my_agent.step(reward_since_last_action[current_player],
+                          current_player, legal_moves, observation_vector)
+        agent_time = time.time()
+        total_agent_time+= agent_time-env_time
+      else:
+        # print("Has played and not zero")
+        try:
+          action = their_agent.act(observation)
+        except AttributeError:
+          action = their_agent.step(reward_since_last_action[current_player],
+                          current_player, legal_moves, observation_vector)
+        partner_time = time.time()
+        total_partner_time+= partner_time-env_time
+    else:
+      # Each player begins the episode on their first turn (which may not be
+      # the first move of the game).
+      if current_player == my_player_index:
+        # print("Not Has played and zero")
+        try:
+          action = my_agent.act(observation)
+        except AttributeError:
+          action = my_agent.begin_episode(current_player, legal_moves,
+                                   observation_vector).item()
+        agent_time = time.time()
+        total_agent_time+= agent_time-env_time
+      else:
+        # print("Not Has played and not zero")
+        # print(observations)
+        try:
+          action = their_agent.act(observation)
+        except AttributeError:
+          action = their_agent.begin_episode(current_player, legal_moves,
+                                   observation_vector).item()
+        partner_time = time.time()
+        total_partner_time+= partner_time-env_time
+      has_played.add(current_player)
+
+    # Reset this player's reward accumulator.
+    reward_since_last_action[current_player] = 0
+
+  # Profiling
+  if PROFILING:
+    print("-=-=--=--=Profiling-=-=-=-=-=  ")
+    print("Average  time per step = {0}".format(total_step_time/step_number))
+    print("Average envornment time per step = {0}".format(total_env_time/step_number))
+    print("Average agent time per step = {0}".format(2*total_agent_time/step_number))
+    print("Average train time per step = {0}".format(2*total_train_time/step_number))
+    print("Average act time per step = {0}".format(2*total_act_time/step_number))
+    print(their_agent)
+    print("Average partner time per step = {0}".format(2*total_partner_time/step_number))
+
+  if isinstance(my_agent,RainbowAgent):
+    my_agent.end_episode(reward_since_last_action)
+
+#   tf.logging.info('EPISODE: %d %g', step_number, total_reward)
+  return step_number, total_reward, lenient_reward, strict_reward, bombed
 
 def run_one_episode(my_agent, their_agent, lenient, environment, obs_stacker):
   """Runs the agent on a single game of Hanabi in self-play mode.
