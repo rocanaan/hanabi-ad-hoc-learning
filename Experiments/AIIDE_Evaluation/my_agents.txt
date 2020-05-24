@@ -1,0 +1,7 @@
+Rainbow ../../Logs/Rainbow/ Paired/Outer5500 5500
+Rulebased IGGIAgent
+Rulebased InternalAgent
+Rulebased OuterAgent
+Rulebased VanDenBerghAgent
+Rulebased FlawedAgent
+Rulebased PiersAgent

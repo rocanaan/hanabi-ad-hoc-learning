@@ -560,6 +560,7 @@ class DQNAgent(object):
     Returns:
       A boolean indicating whether unbundling was successful.
     """
+
     try:
       # replay.load() will throw a GOSError if it does not find all the
       # necessary files, in which case we should abort the process.
