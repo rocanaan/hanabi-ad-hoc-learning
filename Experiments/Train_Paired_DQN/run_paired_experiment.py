@@ -30,6 +30,8 @@ from __future__ import print_function
 import time
 import copy
 
+import pdb
+
 from third_party.dopamine import checkpointer
 from third_party.dopamine import iteration_statistics
 import dqn_agent
@@ -438,9 +440,16 @@ def run_episode_behavioral(my_agent, their_agent, lenient, environment, obs_stac
 
   start_time=time.time()
 
+  hints_given = np.zeros(environment.players)
+  hints_possible = np.zeros(environment.players)
+  total_information_plays = np.zeros(environment.players)
+  num_plays = np.zeros(environment.players)
+  points_scored = np.zeros(environment.players)
+  mistakes_made = np.zeros(environment.players)
+
+  current_lives = 2
+
   while not is_done:
-    total_step_time += time.time()-start_time
-    start_time=time.time()
 
     # observations, reward, is_done, _ = environment.step(action.item())
     try:
@@ -448,6 +457,13 @@ def run_episode_behavioral(my_agent, their_agent, lenient, environment, obs_stac
     except ValueError:
       observations, reward, is_done, _ = environment.step(int(action))
 
+    # Get behavioral metrics resulting from previus action and attribute it to the non-current player. Note that at this point we haven't updated the current player yet.
+    if reward == 1:
+      points_scored[(current_player+my_player_index)%environment.players] +=1
+    # print(observations)
+    if observations['player_observations'][current_player]['life_tokens'] < current_lives:
+      mistakes_made[(current_player+my_player_index)%environment.players] +=1
+    current_lives = observations['player_observations'][current_player]['life_tokens']
 
     modified_reward = max(reward, 0) if lenient else reward
     total_reward += modified_reward
@@ -466,10 +482,6 @@ def run_episode_behavioral(my_agent, their_agent, lenient, environment, obs_stac
         parse_observations(observations, environment.num_moves(), obs_stacker))
     observation = observations['player_observations'][current_player]
 
-
-    env_time=time.time()
-    total_env_time+=env_time-start_time
-
     if current_player in has_played:
       if current_player == my_player_index:
         # print("Has played and zero")
@@ -481,8 +493,6 @@ def run_episode_behavioral(my_agent, their_agent, lenient, environment, obs_stac
         except AttributeError:
           action = my_agent.step(reward_since_last_action[current_player],
                           current_player, legal_moves, observation_vector)
-        agent_time = time.time()
-        total_agent_time+= agent_time-env_time
       else:
         # print("Has played and not zero")
         try:
@@ -490,8 +500,6 @@ def run_episode_behavioral(my_agent, their_agent, lenient, environment, obs_stac
         except AttributeError:
           action = their_agent.step(reward_since_last_action[current_player],
                           current_player, legal_moves, observation_vector)
-        partner_time = time.time()
-        total_partner_time+= partner_time-env_time
     else:
       # Each player begins the episode on their first turn (which may not be
       # the first move of the game).
@@ -502,8 +510,6 @@ def run_episode_behavioral(my_agent, their_agent, lenient, environment, obs_stac
         except AttributeError:
           action = my_agent.begin_episode(current_player, legal_moves,
                                    observation_vector).item()
-        agent_time = time.time()
-        total_agent_time+= agent_time-env_time
       else:
         # print("Not Has played and not zero")
         # print(observations)
@@ -512,12 +518,58 @@ def run_episode_behavioral(my_agent, their_agent, lenient, environment, obs_stac
         except AttributeError:
           action = their_agent.begin_episode(current_player, legal_moves,
                                    observation_vector).item()
-        partner_time = time.time()
-        total_partner_time+= partner_time-env_time
       has_played.add(current_player)
+
+    # print(observations)
+    current_player_observation=observations['player_observations'][current_player]
+    # print(current_player_observation)
+    # print(observations['player_observations'][(current_player+1)%2])
+    # pdb.set_trace()
+    if current_player_observation['information_tokens'] >0:
+      hints_possible[(current_player+my_player_index)%environment.players]+=1
+    # print(action)
+    try:
+      if action['action_type'] == 'REVEAL_RANK' or action['action_type'] == 'REVEAL_COLOR':
+        hints_given[(current_player+my_player_index)%environment.players]+=1
+    except (IndexError, TypeError) as e:
+      if int(action) >=10:
+        hints_given[(current_player+my_player_index)%environment.players]+=1
+
+    # Check if chosen action is play:
+    play_action = False
+    try:
+      if action['action_type'] == 'PLAY':
+        play_action = True
+        num_plays[(current_player+my_player_index)%environment.players] +=1
+        index = action['card_index']
+    except (IndexError, TypeError) as e:
+      if int(action) < 5:
+        play_action = True
+        num_plays[(current_player+my_player_index)%environment.players] +=1
+        index = int(action)
+    if play_action:
+      information = 0
+      # print(current_player_observation)
+      # print(action)
+      # print(index)
+      if current_player_observation['card_knowledge'][0][index]['color'] is not None:
+        information+=1
+        # print ("Knew color")
+      if current_player_observation['card_knowledge'][0][index]['rank'] is not None:
+        information+=1
+        # print ("Knew Rank")
+      # pdb.set_trace()
+      total_information_plays[(current_player+my_player_index)%environment.players]+=information
+
+
+
+    # print(action)
+    # print(current_player_observation['legal_moves'])
+    # print(current_player_observation['legal_moves_as_int'])
 
     # Reset this player's reward accumulator.
     reward_since_last_action[current_player] = 0
+    # pdb.set_trace()
 
   # Profiling
   if PROFILING:
@@ -534,7 +586,7 @@ def run_episode_behavioral(my_agent, their_agent, lenient, environment, obs_stac
     my_agent.end_episode(reward_since_last_action)
 
 #   tf.logging.info('EPISODE: %d %g', step_number, total_reward)
-  return step_number, total_reward, lenient_reward, strict_reward, bombed
+  return step_number, total_reward, lenient_reward, strict_reward, bombed, hints_given, hints_possible, total_information_plays, num_plays, points_scored, mistakes_made
 
 def run_one_episode(my_agent, their_agent, lenient, environment, obs_stacker):
   """Runs the agent on a single game of Hanabi in self-play mode.

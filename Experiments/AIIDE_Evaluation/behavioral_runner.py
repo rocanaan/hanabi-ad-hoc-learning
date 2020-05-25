@@ -36,11 +36,31 @@ class BehavioralRunner(object):
     """Run episodes."""
     obs_stacker = run_paired_experiment.create_obs_stacker(self.environment)
 
+    num_episodes = self.flags['num_episodes']
+
+
+    hints_given = np.zeros(self.environment.players)
+    hints_possible = np.zeros(self.environment.players)
+    total_information_plays = np.zeros(self.environment.players)
+    num_plays = np.zeros(self.environment.players)
+    points_scored = np.zeros(self.environment.players)
+    mistakes_made = np.zeros(self.environment.players)
+    total_bombed = 0
+
     rewards = []
-    for episode in range(self.flags['num_episodes']):
-      episode_length, episode_return, lr, sr, num_bombed = run_paired_experiment.run_episode_behavioral(self.a1, self.a2, self.lenient, self.environment, obs_stacker)
+    for episode in range(num_episodes):
+      episode_length, episode_return, lr, sr, num_bombed, hg, hp, tip, num_p, ps, mm = run_paired_experiment.run_episode_behavioral(self.a1, self.a2, self.lenient, self.environment, obs_stacker)
       rewards.append(episode_return)
-    
+      hints_given += hg
+      hints_possible += hp
+      total_information_plays += tip
+      num_plays += num_p
+      points_scored += ps
+      mistakes_made += mm
+      total_bombed += num_bombed
+    return rewards, hints_given/hints_possible, total_information_plays/num_plays, points_scored/num_episodes, mistakes_made/num_episodes, float(total_bombed)/float(num_episodes)
+
+
     # # agents = [self.agent_class(self.agent_config)
     # #             for _ in range(self.flags['players'])]
     # # agents = [a1,a2]
@@ -101,7 +121,6 @@ class BehavioralRunner(object):
     #   # print('Average Reward: %.3f' % (sum(rewards)/(episode+1)))
     # # for a in agents:
     # #   a.rulebased.print_histogram()
-    return rewards
 
 if __name__ == "__main__":
   flags = {'players': 2, 'num_episodes': 1, 'agent_class': 'SimpleAgent'}
