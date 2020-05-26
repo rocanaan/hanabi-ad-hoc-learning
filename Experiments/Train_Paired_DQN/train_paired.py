@@ -39,11 +39,15 @@ from flawed_agent import FlawedAgent
 from piers_agent import PiersAgent
 from van_den_bergh_agent import VanDenBerghAgent
 
+from internal_discard_oldest import InternalDiscardOldest
+from internal_probabilistic import InternalProbabilistic
+from internal_swapped import InternalSwapped
+
 AGENT_CLASSES = {'SimpleAgent': SimpleAgent, 'RandomAgent': RandomAgent, 'InternalAgent': InternalAgent, 
 'OuterAgent': OuterAgent,'IGGIAgent':IGGIAgent,'LegalRandomAgent':LegalRandomAgent,'FlawedAgent':FlawedAgent,
-'PiersAgent':PiersAgent, 'VanDenBerghAgent':VanDenBerghAgent}
+'PiersAgent':PiersAgent, 'VanDenBerghAgent':VanDenBerghAgent, 'InternalDiscardOldest': InternalDiscardOldest, 'InternalProbabilistic': InternalProbabilistic, 'InternalSwapped': InternalSwapped}
 
-rulebased_names = ['InternalAgent','OuterAgent','IGGIAgent','FlawedAgent','PiersAgent','VanDenBerghAgent']
+rulebased_names = ['InternalAgent','OuterAgent','IGGIAgent','FlawedAgent','PiersAgent','VanDenBerghAgent','InternalDiscardOldest', 'InternalProbabilistic', 'InternalSwapped'] # TODO: Decide if I want to leave Internal variations here or treta as special case
 all_agent_names = rulebased_names.copy()
 all_agent_names.append('Mirror')
 

@@ -4,3 +4,6 @@ Rulebased OuterAgent
 Rulebased VanDenBerghAgent
 Rulebased FlawedAgent
 Rulebased PiersAgent
+Rulebased InternalSwapped
+Rulebased InternalProbabilistic
+Rulebased InternalDiscardOldest

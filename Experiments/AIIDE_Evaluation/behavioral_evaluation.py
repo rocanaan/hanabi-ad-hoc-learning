@@ -34,6 +34,9 @@ from third_party.dopamine import checkpointer
 
 from rulebased_agent import RulebasedAgent
 from internal_agent import InternalAgent
+from internal_discard_oldest import InternalDiscardOldest
+from internal_probabilistic import InternalProbabilistic
+from internal_swapped import InternalSwapped
 from outer_agent import OuterAgent
 from iggi_agent import IGGIAgent
 from legal_random_agent import LegalRandomAgent
@@ -55,9 +58,9 @@ first = True
 
 AGENT_CLASSES = {'IGGIAgent':IGGIAgent,'InternalAgent': InternalAgent,
 'OuterAgent': OuterAgent,'LegalRandomAgent':LegalRandomAgent,'VanDenBerghAgent':VanDenBerghAgent,'FlawedAgent':FlawedAgent,
-'PiersAgent':PiersAgent, 'RainbowAgent':None}
+'PiersAgent':PiersAgent, "InternalDiscardOldest": InternalDiscardOldest, "InternalProbabilistic": InternalProbabilistic, "InternalSwapped": InternalSwapped, 'RainbowAgent':None}
 
-SETTINGS = {'players': 2, 'num_episodes': 100}
+SETTINGS = {'players': 2, 'num_episodes': 10}
 
 
 def get_agent_descriptors(file):

@@ -57,10 +57,14 @@ from piers_agent import PiersAgent
 from van_den_bergh_agent import VanDenBerghAgent
 
 
+from internal_discard_oldest import InternalDiscardOldest
+from internal_probabilistic import InternalProbabilistic
+from internal_swapped import InternalSwapped
+
 AGENTS = [IGGIAgent, InternalAgent, OuterAgent, LegalRandomAgent, VanDenBerghAgent, FlawedAgent, PiersAgent]
 AGENT_CLASSES = {'SimpleAgent': SimpleAgent, 'RandomAgent': RandomAgent, 'InternalAgent': InternalAgent, 
 'OuterAgent': OuterAgent,'IGGIAgent':IGGIAgent,'LegalRandomAgent':LegalRandomAgent,'FlawedAgent':FlawedAgent,
-'PiersAgent':PiersAgent, 'VanDenBerghAgent':VanDenBerghAgent}
+'PiersAgent':PiersAgent, 'VanDenBerghAgent':VanDenBerghAgent, 'InternalDiscardOldest': InternalDiscardOldest, 'InternalProbabilistic': InternalProbabilistic, 'InternalSwapped': InternalSwapped}
 
 LENIENT_SCORE = True
 

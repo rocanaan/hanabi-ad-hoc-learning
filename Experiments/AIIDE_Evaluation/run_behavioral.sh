@@ -16,7 +16,7 @@ export PYTHONPATH=${PYTHONPATH}:../Train_Paired_DQN
 
 python3 -um behavioral_evaluation \
   --my_agents=rulebased_agents.txt \
-  --their_agents=their_agents.txt \
+  --their_agents=rulebased_agents.txt \
   --num_of_iterations=10 \
   --gin_files="hanabi_rainbow.gin"\
 
