@@ -3,7 +3,7 @@
 # Training and evalu partners can be either "rb" all"
 # TRAINING_PARTNERS="all"
 # TRAINING_PARTNERS="rb"
-# TRAINING_PARTNERS="Mirror"
+TRAINING_PARTNERS="Mirror"
 # TRAINING_PARTNERS="InternalAgent"
 # TRAINING_PARTNERS="OuterAgent"
 # TRAINING_PARTNERS="IGGIAgent"
@@ -16,7 +16,7 @@
 #Internal variations
 # TRAINING_PARTNERS="InternalDiscardOldest"
 # TRAINING_PARTNERS="InternalProbabilistic"
-TRAINING_PARTNERS="InternalSwapped"
+# TRAINING_PARTNERS="InternalSwapped"
 
 
 

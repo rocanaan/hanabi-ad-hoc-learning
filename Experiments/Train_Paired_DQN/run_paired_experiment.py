@@ -925,7 +925,7 @@ def run_one_iteration(my_agent, training_partners, eval_partners, lenient, envir
 
 
 def log_experiment(experiment_logger, iteration, statistics,
-                   logging_file_prefix='log', log_every_n=1):
+                   logging_file_prefix='log', log_every_n=1000):
   """Records the results of the current iteration.
 
   Args:
@@ -971,7 +971,7 @@ def run_paired_experiment(my_agent,  training_partners, eval_partners, lenient,
                    num_iterations=200,
                    training_steps=5000,
                    logging_file_prefix='log',
-                   log_every_n=10,
+                   log_every_n=1000,
                    checkpoint_every_n=1):
   """Runs a full experiment, spread over multiple iterations."""
   # their_agent = InternalAgent({})
