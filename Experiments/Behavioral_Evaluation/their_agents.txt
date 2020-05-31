@@ -1,0 +1,7 @@
+Rulebased IGGIAgent
+Rulebased InternalAgent
+Rulebased OuterAgent
+Rulebased VanDenBerghAgent
+Rulebased FlawedAgent
+Rulebased PiersAgent
+Self

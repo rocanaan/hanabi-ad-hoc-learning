@@ -39,10 +39,17 @@ from flawed_agent import FlawedAgent
 from piers_agent import PiersAgent
 from van_den_bergh_agent import VanDenBerghAgent
 
+from internal_discard_oldest import InternalDiscardOldest
+from internal_probabilistic import InternalProbabilistic
+from internal_swapped import InternalSwapped
+
 AGENT_CLASSES = {'SimpleAgent': SimpleAgent, 'RandomAgent': RandomAgent, 'InternalAgent': InternalAgent, 
 'OuterAgent': OuterAgent,'IGGIAgent':IGGIAgent,'LegalRandomAgent':LegalRandomAgent,'FlawedAgent':FlawedAgent,
-'PiersAgent':PiersAgent, 'VanDenBerghAgent':VanDenBerghAgent}
+'PiersAgent':PiersAgent, 'VanDenBerghAgent':VanDenBerghAgent, 'InternalDiscardOldest': InternalDiscardOldest, 'InternalProbabilistic': InternalProbabilistic, 'InternalSwapped': InternalSwapped}
 
+rulebased_names = ['InternalAgent','OuterAgent','IGGIAgent','FlawedAgent','PiersAgent','VanDenBerghAgent','InternalDiscardOldest', 'InternalProbabilistic', 'InternalSwapped'] # TODO: Decide if I want to leave Internal variations here or treta as special case
+all_agent_names = rulebased_names.copy()
+all_agent_names.append('Mirror')
 
 import run_paired_experiment
 
@@ -74,6 +81,27 @@ flags.DEFINE_string('checkpoint_save_dir',None,
                     'Path to save directory')
 flags.DEFINE_string('checkpoint_version', None,
                     'Specific checkpoint file version to be loaded. If empty, the newest checkpoint will be loaded.')
+flags.DEFINE_string('training_partners',None,'Agents used as partners during training')
+flags.DEFINE_string('eval_partners',None,'Agents used as partners during evaluation')
+flags.DEFINE_string('lenient','True','Scoring scheme used. If true, score is maintained even if all lives are lost')
+
+def parse_partner_names(name_string):
+  if name_string=='all':
+    return all_agent_names
+  if name_string=='rb':
+    return rulebased_names
+  else:
+    partners=[] 
+    names=name_string.split("_")
+    print("Generating partners: " + str(names))
+    for n in names:
+      if n in all_agent_names:
+        partners.append(n)
+      else:
+        exit("Partner name {0} invalid. Valid names are \'all\', \'rb or {1}".format((n,all_agent_names)))
+    return partners
+
+
 
 
 def launch_experiment():
@@ -99,7 +127,18 @@ def launch_experiment():
   environment = run_paired_experiment.create_environment()
   obs_stacker = run_paired_experiment.create_obs_stacker(environment)
   my_agent = run_paired_experiment.create_agent(environment, obs_stacker,'Rainbow')
-  their_agent = VanDenBerghAgent({})
+  
+
+  training_partners = parse_partner_names(FLAGS.training_partners)
+  eval_partners = parse_partner_names(FLAGS.eval_partners)
+  assert training_partners, "Could not identify training partners"
+  assert eval_partners, "Could not identigy evaluation partners"
+  # their_agent = VanDenBerghAgent({})
+
+
+  lenient = True
+  if FLAGS.lenient!='True':
+    lenient = False
 
   checkpoint_dir = FLAGS.checkpoint_dir
   if FLAGS.checkpoint_save_dir == None:
@@ -110,6 +149,14 @@ def launch_experiment():
     experiment_logger = logger.Logger('{}/logs'.format(FLAGS.checkpoint_save_dir))
     print ("set save dir as: "+ checkpoint_save_dir)
 
+  print("Starting training of Rainbow agent")
+  print("Checkpoint_dir = {0}".format(checkpoint_dir))
+  print("Training partners = {0}".format(training_partners))
+  print("Evaluation partners = {0}".format(eval_partners))
+  print("Lenient scoring  = {0}".format(lenient))
+
+
+
   start_iteration, experiment_checkpointer = (
       run_paired_experiment.initialize_checkpointing(my_agent,
                                               experiment_logger,
@@ -119,7 +166,7 @@ def launch_experiment():
                                               FLAGS.checkpoint_file_prefix))
 
 
-  run_paired_experiment.run_paired_experiment(my_agent, their_agent, environment, start_iteration,
+  run_paired_experiment.run_paired_experiment(my_agent, training_partners, eval_partners, lenient, environment, start_iteration,
                                 obs_stacker,
                                 experiment_logger, experiment_checkpointer,
                                 checkpoint_save_dir,

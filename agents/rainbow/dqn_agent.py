@@ -34,6 +34,8 @@ import numpy as np
 import replay_memory
 import tensorflow as tf
 
+import time
+
 
 slim = tf.contrib.slim
 
@@ -172,6 +174,19 @@ class DQNAgent(object):
     self.batch_staged = False
     self.optimizer = optimizer
 
+
+    if 'gpu' in tf_device:
+      gpus = tf.config.experimental.list_physical_devices('GPU')
+      try:
+        # Currently, memory growth needs to be the same across GPUs
+        for gpu in gpus:
+          tf.config.experimental.set_memory_growth(gpu, True)
+        logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+        print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+      except RuntimeError as e:
+        # Memory growth must be set before GPUs have been initialized
+        print(e)
+
     with tf.device(tf_device):
       # Calling online_convnet will generate a new graph as defined in
       # graph_template using whatever input is passed, but will always share
@@ -299,6 +314,33 @@ class DQNAgent(object):
                             self.action, begin=True)
     return self.action
 
+  def profile_step(self, reward, current_player, legal_actions, observation):
+    """Stores observations from last transition and chooses a new action.
+
+    Notifies the agent of the outcome of the latest transition and stores it
+      in the replay memory, selects a new action and applies a training step.
+
+    Args:
+      reward: float, the reward received from its action.
+      current_player: int, the player whose turn it is.
+      legal_actions: `np.array`, actions which the player can currently take.
+      observation: `np.array`, the most recent observation.
+
+    Returns:
+      A legal, int-valued action.
+    """
+
+    # Profiling
+    start = time.time()
+    self._train_step()
+    train= time.time()-start
+    self.action = self._select_action(observation, legal_actions)
+    self._record_transition(current_player, reward, observation, legal_actions,
+                            self.action)
+    act = time.time()-(start+train)
+    # print("{0} {1}".format(train, act))
+    return self.action, train, act
+
   def step(self, reward, current_player, legal_actions, observation):
     """Stores observations from last transition and chooses a new action.
 
@@ -314,11 +356,16 @@ class DQNAgent(object):
     Returns:
       A legal, int-valued action.
     """
-    self._train_step()
 
+    # Profiling
+    # start = time.time()
+    self._train_step()
+    # train= time.time()-start
     self.action = self._select_action(observation, legal_actions)
     self._record_transition(current_player, reward, observation, legal_actions,
                             self.action)
+    # act = time.time()-(start+train)
+    # print("{0} {1}".format(train, act))
     return self.action
 
   def end_episode(self, final_rewards):
@@ -513,6 +560,7 @@ class DQNAgent(object):
     Returns:
       A boolean indicating whether unbundling was successful.
     """
+
     try:
       # replay.load() will throw a GOSError if it does not find all the
       # necessary files, in which case we should abort the process.
