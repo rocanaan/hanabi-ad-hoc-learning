@@ -387,8 +387,8 @@ def run_one_episode_mirror(agent, lenient, environment, obs_stacker):
   #tf.logging.info('EPISODE: %d %g', step_number, total_reward)
   return step_number, total_reward, lenient_reward, strict_reward, bombed
 
-
-def run_episode_behavioral(my_agent, their_agent, lenient, environment, obs_stacker):
+@gin.configurable
+def run_episode_behavioral(my_agent, their_agent, lenient, environment, obs_stacker, display_moves = False):
   """Runs the agent on a single game of Hanabi in self-play mode.
 
   Args:
@@ -454,12 +454,28 @@ def run_episode_behavioral(my_agent, their_agent, lenient, environment, obs_stac
   current_lives = 2
 
   while not is_done:
-
+   if display_moves:
+    if current_player == 0:
+      current_agent = my_agent
+    else:
+      current_agent = their_agent
+    print("Current player is {}".format(current_agent))
+    print(observation)
+    if isinstance(action,dict):
+      print(action)
+    else:
+      print("getting move")
+      print(environment.game.get_move(action))
+      
     # observations, reward, is_done, _ = environment.step(action.item())
     try:
       observations, reward, is_done, _ = environment.step(action)
     except ValueError:
       observations, reward, is_done, _ = environment.step(int(action))
+
+    if display_moves:
+      print("Reward of move was {}".format(reward))
+      pdb.set_trace()
 
     # Get behavioral metrics resulting from previus action and attribute it to the non-current player. Note that at this point we haven't updated the current player yet.
     if reward == 1:
