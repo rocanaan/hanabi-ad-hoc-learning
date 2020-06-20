@@ -17,6 +17,7 @@ from rl_env import Agent
 import random
 import numpy as np
 import pyhanabi
+import pdb
 
 global colors
 colors = ['R', 'Y', 'G', 'W', 'B']
@@ -56,14 +57,33 @@ def useless_card(card,fireworks,max_fireworks):
 
 def get_plausible_cards(observation, player_offset, hand_index):
   card_knowledge = observation['pyhanabi'].card_knowledge()[player_offset]
+  # print(card_knowledge)
   hidden_card = card_knowledge[hand_index]
+  # print(hidden_card)
   plausible_cards = []
   for color_index in range(5):
     for rank_index in range(5):
+      # print(hidden_card.color_plausible(color_index))
+      # print(hidden_card.rank_plausible(rank_index))
       if (hidden_card.color_plausible(color_index) and hidden_card.rank_plausible(rank_index)):
         plausible_card = pyhanabi.HanabiCard(color_index,rank_index)
         plausible_cards.append(plausible_card)
+  # print(plausible_cards)
+  # pdb.set_trace()
   return plausible_cards
+
+
+# def get_plausible_cards(observation, player_offset, hand_index):
+#   card_knowledge = observation['pyhanabi'].card_knowledge()[player_offset]
+#   hidden_card = card_knowledge[hand_index]
+#   plausible_cards = []
+#   for color_index in range(5):
+#     for rank_index in range(5):
+#       if (hidden_card.color_plausible(color_index) and hidden_card.rank_plausible(rank_index)):
+#         plausible_card = pyhanabi.HanabiCard(color_index,rank_index)
+#         plausible_cards.append(plausible_card)
+#   return plausible_cards
+
 
 
 def get_visible_cards(observation,player_offset):

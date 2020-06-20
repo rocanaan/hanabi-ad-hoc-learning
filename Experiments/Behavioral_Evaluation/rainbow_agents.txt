@@ -1,6 +1,7 @@
-Rainbow ../../Logs/Rainbow/ Paired/Ensemble5500 5500 Ensemble
-Rainbow ../../Logs/Rainbow/ Paired/IGGI5500 5500 IGGI
-Rainbow ../../Logs/Rainbow/ Paired/Internal5500 5500 Internal
-Rainbow ../../Logs/Rainbow/ Paired/Outer5500 5500 Outer
-Rainbow ../../Logs/Rainbow/ Paired/Flawed5500 5500 Flawed
-Rainbow ../../Logs/Rainbow/ Paired/Piers5500 5500 Piers
+Rainbow ../../Logs/Rainbow/ Paired/Ensemble5500 latest Ensemble
+Rainbow ../../Logs/Rainbow/ Paired/Flawed5500 latest Flawed
+Rainbow ../../Logs/Rainbow/ Paired/IGGI5500 latest IGGI
+Rainbow ../../Logs/Rainbow/ Paired/Internal5500 latest Internal
+Rainbow ../../Logs/Rainbow/ Paired/Outer5500 latest Outer
+Rainbow ../../Logs/Rainbow/ Paired/FVDB5500 latest VDB
+Rainbow ../../Logs/Rainbow/ Paired/Piers5500 latest Piers

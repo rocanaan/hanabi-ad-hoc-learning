@@ -60,7 +60,6 @@ AGENT_CLASSES = {'IGGIAgent':IGGIAgent,'InternalAgent': InternalAgent,
 'OuterAgent': OuterAgent,'LegalRandomAgent':LegalRandomAgent,'VanDenBerghAgent':VanDenBerghAgent,'FlawedAgent':FlawedAgent,
 'PiersAgent':PiersAgent, "InternalDiscardOldest": InternalDiscardOldest, "InternalProbabilistic": InternalProbabilistic, "InternalSwapped": InternalSwapped, 'RainbowAgent':None}
 
-SETTINGS = {'players': 2, 'num_episodes': 10}
 
 
 def get_agent_descriptors(file):
@@ -68,7 +67,7 @@ def get_agent_descriptors(file):
     lines  = f.readlines()
   return lines
 
-def make_agent(l):
+def make_agent(l,settings):
 
   global experiment_logger
   global environment
@@ -79,7 +78,7 @@ def make_agent(l):
   print(l)
   if l[0].lower() == 'rulebased':
     print("RULEBASED")
-    agent = AGENT_CLASSES[l[1]](SETTINGS)
+    agent = AGENT_CLASSES[l[1]](settings)
     name = l[1]
   elif l[0].lower() == 'rainbow':
     print("RAINBOW")
@@ -87,7 +86,9 @@ def make_agent(l):
     checkpoint_dir = base_dir+l[2]
     checkpoint_save_dir = base_dir+ 'test/checkpoints'
 
-    checkpoint_version = l[3]
+    checkpoint_version = None
+    if l[3].isdigit():
+      checkpoint_version = l[3]
 
 
     if first:
@@ -180,23 +181,34 @@ def main(unused_argv):
   their_agents_file = FLAGS.their_agents
   their_descriptors =  get_agent_descriptors(their_agents_file)  
 
+  num_episodes = int(FLAGS.num_of_iterations)
+  settings = {'players': 2, 'num_episodes': num_episodes}
+
+
   results = []
   for d1 in my_descriptors:
     print(d1)
-    a1, n1 = make_agent(d1)
+    a1, n1 = make_agent(d1,settings)
     for d2 in their_descriptors:
-      a2, n2 = make_agent(d2)
+      a2, n2 = make_agent(d2,settings)
       if a2 is None:
         a2 = a1
-      runner = BehavioralRunner(SETTINGS,a1,a2)
+      runner = BehavioralRunner(settings,a1,a2)
       rewards, communicativeness, ipp, points_scored, mistakes_made, total_bombs = runner.run()
       score = np.average(rewards)
-      print("{0} {1} {2} {3} {4} {5} {6} {7}".format(n1,n2,score, communicativeness, ipp, points_scored, mistakes_made, total_bombs))
-      results.append([n1,n2,score, communicativeness, ipp, points_scored, mistakes_made, total_bombs])
+      std = np.std(rewards)
+      print("{0} {1} {2} {3} {4} {5} {6} {7}".format(n1,n2,score, std, communicativeness, ipp, points_scored, mistakes_made, total_bombs))
+      # results.append([n1,n2,score, communicativeness, ipp, points_scored, mistakes_made, total_bombs])
+      results.append([n1,n2,score, std, communicativeness[0], communicativeness[1], ipp[0], ipp[1], points_scored[0], points_scored[1], mistakes_made[0], mistakes_made[1], total_bombs])
+      print(rewards)
+
     a1 = None
 
+  print("Agent 1,Agent 2,Average Score,SD,Communicativeness 1,Communicativeness 2_,IPP 1,IPP 2,Points_Scored 1,Points_Scored 2,Mistakes 1,Mistakes 2,Total Bombs")
   for r in results:
-    print(r)
+    for info in r:
+      print(info, end=" ")
+    print("")
 
 
 if __name__ == '__main__':
