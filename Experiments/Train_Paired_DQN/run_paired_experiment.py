@@ -454,18 +454,18 @@ def run_episode_behavioral(my_agent, their_agent, lenient, environment, obs_stac
   current_lives = 2
 
   while not is_done:
-   if display_moves:
-    if current_player == 0:
-      current_agent = my_agent
-    else:
-      current_agent = their_agent
-    print("Current player is {}".format(current_agent))
-    print(observation)
-    if isinstance(action,dict):
-      print(action)
-    else:
-      print("getting move")
-      print(environment.game.get_move(action))
+    if display_moves:
+      if current_player == 0:
+        current_agent = my_agent
+      else:
+        current_agent = their_agent
+      print("Current player is {}".format(current_agent))
+      print(observation)
+      if isinstance(action,dict):
+        print(action)
+      else:
+        print("getting move")
+        print(environment.game.get_move(action))
       
     # observations, reward, is_done, _ = environment.step(action.item())
     try:
