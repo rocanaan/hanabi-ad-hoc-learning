@@ -1,0 +1,219 @@
+{
+    "current_player": 0,
+    "current_player_offset": 0,
+    "life_tokens": 3,
+    "information_tokens": 5,
+    "num_players": 2,
+    "deck_size": 36,
+    "fireworks": {
+        "R": 1,
+        "Y": 0,
+        "G": 1,
+        "W": 0,
+        "B": 1
+    },
+    "legal_moves": [
+        {
+            "action_type": "DISCARD",
+            "card_index": 0
+        },
+        {
+            "action_type": "DISCARD",
+            "card_index": 1
+        },
+        {
+            "action_type": "DISCARD",
+            "card_index": 2
+        },
+        {
+            "action_type": "DISCARD",
+            "card_index": 3
+        },
+        {
+            "action_type": "DISCARD",
+            "card_index": 4
+        },
+        {
+            "action_type": "PLAY",
+            "card_index": 0
+        },
+        {
+            "action_type": "PLAY",
+            "card_index": 1
+        },
+        {
+            "action_type": "PLAY",
+            "card_index": 2
+        },
+        {
+            "action_type": "PLAY",
+            "card_index": 3
+        },
+        {
+            "action_type": "PLAY",
+            "card_index": 4
+        },
+        {
+            "action_type": "REVEAL_COLOR",
+            "target_offset": 1,
+            "color": "Y"
+        },
+        {
+            "action_type": "REVEAL_COLOR",
+            "target_offset": 1,
+            "color": "R"
+        },
+        {
+            "action_type": "REVEAL_COLOR",
+            "target_offset": 1,
+            "color": "B"
+        },
+        {
+            "action_type": "REVEAL_RANK",
+            "target_offset": 1,
+            "rank": 1
+        },
+        {
+            "action_type": "REVEAL_RANK",
+            "target_offset": 1,
+            "rank": 2
+        },
+        {
+            "action_type": "REVEAL_RANK",
+            "target_offset": 1,
+            "rank": 3
+        }
+    ],
+    "legal_moves_as_int": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        11,
+        10,
+        14,
+        16,
+        17,
+        18
+    ],
+    "observed_hands": [
+        [
+            {
+                "color": null,
+                "rank": -1
+            },
+            {
+                "color": null,
+                "rank": -1
+            },
+            {
+                "color": null,
+                "rank": -1
+            },
+            {
+                "color": null,
+                "rank": -1
+            },
+            {
+                "color": null,
+                "rank": -1
+            }
+        ],
+        [
+            {
+                "color": "G",
+                "rank": 3
+            },
+            {
+                "color": "Y",
+                "rank": 2
+            },
+            {
+                "color": "O",
+                "rank": 1
+            },
+            {
+                "color": "G",
+                "rank": 4
+            },
+            {
+                "color": "B",
+                "rank": 3
+            }
+        ]
+    ],
+    "discard_pile": [
+        {
+            "color": "O",
+            "rank": 3
+        }
+    ],
+    "card_knowledge": [
+        [
+            {
+                "color": "B",
+                "rank": null
+            },
+            {
+                "color": null,
+                "rank": null
+            },
+            {
+                "color": null,
+                "rank": null
+            },
+            {
+                "color": null,
+                "rank": null
+            },
+            {
+                "color": null,
+                "rank": null
+            }
+        ],
+        [
+            {
+                "color": null,
+                "rank": null
+            },
+            {
+                "color": null,
+                "rank": null
+            },
+            {
+                "color": null,
+                "rank": null
+            },
+            {
+                "color": null,
+                "rank": 4
+            },
+            {
+                "color": null,
+                "rank": null
+            }
+        ]
+    ],
+    "complete_card_knowledge": [
+        [
+            "B2345",
+            "RYGW2345",
+            "RYGW2345",
+            "RYGW12345",
+            "RYGWB12345"
+        ],
+        [
+            "RYGWB234",
+            "RYGWB234",
+            "RYGWB234",
+            "RYGWB5",
+            "RYGWB12345"
+        ]
+    ]
+}

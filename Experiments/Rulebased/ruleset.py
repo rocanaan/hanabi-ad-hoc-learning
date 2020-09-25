@@ -42,7 +42,15 @@ def playable_card(card, fireworks):
   elif card['color'] == None or card['rank'] == None:
       return False
   else:
-      return card['rank'] == fireworks[card['color']]
+      #TODO: This is a quick fix to account for the fact that, when using states from SPARTA, it sometimes gets here with color 'O' instead of 'Y'
+      try:
+        return card['rank'] == fireworks[card['color']]
+      except KeyError:
+        if card['color'] == 'O':
+          card['color'] = 'W'
+          return card['rank'] == fireworks[card['color']]
+        else:
+          exit("Invalid color " + card['color'] )
 
 def useless_card(card,fireworks,max_fireworks):
   if isinstance(card,pyhanabi.HanabiCard):
@@ -56,20 +64,42 @@ def useless_card(card,fireworks,max_fireworks):
 
 
 def get_plausible_cards(observation, player_offset, hand_index):
-  card_knowledge = observation['pyhanabi'].card_knowledge()[player_offset]
-  # print(card_knowledge)
-  hidden_card = card_knowledge[hand_index]
-  # print(hidden_card)
-  plausible_cards = []
-  for color_index in range(5):
-    for rank_index in range(5):
-      # print(hidden_card.color_plausible(color_index))
-      # print(hidden_card.rank_plausible(rank_index))
-      if (hidden_card.color_plausible(color_index) and hidden_card.rank_plausible(rank_index)):
-        plausible_card = pyhanabi.HanabiCard(color_index,rank_index)
-        plausible_cards.append(plausible_card)
-  # print(plausible_cards)
-  # pdb.set_trace()
+  try:
+    card_knowledge = observation['pyhanabi'].card_knowledge()[player_offset]
+    # print(card_knowledge)
+    hidden_card = card_knowledge[hand_index]
+    # print(hidden_card)
+    plausible_cards = []
+    for color_index in range(5):
+      for rank_index in range(5):
+        # print(hidden_card.color_plausible(color_index))
+        # print(hidden_card.rank_plausible(rank_index))
+        if (hidden_card.color_plausible(color_index) and hidden_card.rank_plausible(rank_index)):
+          plausible_card = pyhanabi.HanabiCard(color_index,rank_index)
+          plausible_cards.append(plausible_card)
+    # print(plausible_cards)
+    # pdb.set_trace()
+
+  # TODO: This is a quick fix to address the lack of a 'pyhanabi' key on states that come from SPARTA.
+  except KeyError:
+    card_knowledge = observation['complete_card_knowledge'][player_offset]
+    # print(card_knowledge)
+    # pdb.set_trace()
+    hidden_card = card_knowledge[hand_index]
+    # pdb.set_trace()
+
+    plausible_cards = []
+    for color_index in range(5):
+      for rank_index in range(5):
+        # print(hidden_card.color_plausible(color_index))
+        # print(hidden_card.rank_plausible(rank_index))
+        if colors[color_index] in hidden_card and str(rank_index+1) in hidden_card:
+          plausible_card = pyhanabi.HanabiCard(color_index,rank_index)
+          plausible_cards.append(plausible_card)
+
+    # print(plausible_cards)
+    # pdb.set_trace()
+
   return plausible_cards
 
 

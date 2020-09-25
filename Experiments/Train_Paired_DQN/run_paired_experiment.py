@@ -461,11 +461,13 @@ def run_episode_behavioral(my_agent, their_agent, lenient, environment, obs_stac
         current_agent = their_agent
       print("Current player is {}".format(current_agent))
       print(observation)
+      exit()
       if isinstance(action,dict):
         print(action)
       else:
         print("getting move")
         print(environment.game.get_move(action))
+        print(action)
       
     # observations, reward, is_done, _ = environment.step(action.item())
     try:
@@ -475,6 +477,12 @@ def run_episode_behavioral(my_agent, their_agent, lenient, environment, obs_stac
 
     if display_moves:
       print("Reward of move was {}".format(reward))
+      print("Total Info Plays {}".format(total_information_plays))
+      print("Total Plays {}".format(num_plays))
+      print("Hints Given {}".format(hints_given))
+      print("Hints Possible {}".format(hints_possible))
+      print("Points Scored {}".format(points_scored))
+      print("Mistakes Made {}".format(mistakes_made))
       pdb.set_trace()
 
     # Get behavioral metrics resulting from previus action and attribute it to the non-current player. Note that at this point we haven't updated the current player yet.

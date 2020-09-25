@@ -33,9 +33,11 @@ class RulebasedAgent():
           # print(rule)
           self.histogram[index]+=1
           self.totalCalls +=1
+          print(self.rules[index])
           return action
       self.histogram[-1]+=1
       self.totalCalls +=1
+      print("Default Random")
       return Ruleset.legal_random(observation)
     return None
  

@@ -31,7 +31,7 @@ run_paired_experiment.num_iterations = 40005
 run_paired_experiment.checkpoint_every_n = 1000
 run_paired_experiment.log_every_n = 250
 run_one_iteration.evaluate_every_n = 5
-run_episode_behavioral.display_moves = False
+run_episode_behavioral.display_moves = True
 
 
 # Small Hanabi.
